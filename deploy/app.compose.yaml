@@ -1,0 +1,117 @@
+x-app-database: &app-database
+  PFL_DATABASE_URL: postgresql+psycopg://assistant:${PFL_DB_PASSWORD}@postgres:5432/assistant
+
+x-api-environment: &api-environment
+  <<: *app-database
+  PFL_READ_DATABASE_URL: postgresql+psycopg://assistant_readonly:${PFL_DB_READ_PASSWORD}@postgres:5432/assistant
+  PFL_DATA_DIR: /data
+  PFL_FRONTEND_DIR: /app/frontend/dist
+  PFL_PROVIDER: ${PFL_PROVIDER:-codex}
+  PFL_MODEL: ${PFL_MODEL:-gpt-6-sol}
+  PFL_APP_ORIGIN: http://127.0.0.1:${PFL_HTTP_PORT:-8080}
+  PFL_MAX_ACTIVE_RUNS: ${PFL_MAX_ACTIVE_RUNS:-4}
+  PFL_LANGFUSE_PUBLIC_KEY: ${PFL_LANGFUSE_PUBLIC_KEY}
+  PFL_LANGFUSE_SECRET_KEY: ${PFL_LANGFUSE_SECRET_KEY}
+  PFL_LANGFUSE_BASE_URL: http://langfuse-web:3000
+  PFL_LANGFUSE_PUBLIC_URL: ${PFL_LANGFUSE_PUBLIC_URL:-http://127.0.0.1:3045}
+  PFL_LAUNCH_TOKEN: ${PFL_LAUNCH_TOKEN}
+  PFL_SERVICE_TOKEN: ${PFL_SERVICE_TOKEN}
+  PFL_BRIDGE_URL: ${PFL_BRIDGE_URL:-http://host.docker.internal:8768}
+  PFL_BRIDGE_TOKEN: ${PFL_BRIDGE_TOKEN}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  PFL_CODEX_HOME: /nonexistent
+  HF_HOME: /models/hf
+  XDG_CACHE_HOME: /models/cache
+  HF_HUB_OFFLINE: "1"
+  TRANSFORMERS_OFFLINE: "1"
+
+x-worker-environment: &worker-environment
+  <<: *app-database
+  PFL_DATA_DIR: /data
+  HF_HOME: /models/hf
+  XDG_CACHE_HOME: /models/cache
+  HF_HUB_OFFLINE: "1"
+  TRANSFORMERS_OFFLINE: "1"
+
+x-reconciler-environment: &reconciler-environment
+  <<: *app-database
+  PFL_LANGFUSE_PUBLIC_KEY: ${PFL_LANGFUSE_PUBLIC_KEY}
+  PFL_LANGFUSE_SECRET_KEY: ${PFL_LANGFUSE_SECRET_KEY}
+  PFL_LANGFUSE_BASE_URL: http://langfuse-web:3000
+  PFL_LANGFUSE_PUBLIC_URL: ${PFL_LANGFUSE_PUBLIC_URL:-http://127.0.0.1:3045}
+
+x-app-security: &app-security
+  user: "10001:10001"
+  read_only: true
+  init: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs: [/tmp]
+  pids_limit: 256
+  restart: unless-stopped
+  stop_grace_period: 35s
+
+services:
+  api:
+    <<: *app-security
+    image: medical-document-assistant:local
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    environment: *api-environment
+    depends_on:
+      postgres: {condition: service_healthy}
+    ports:
+      - "127.0.0.1:${PFL_HTTP_PORT:-8080}:8080"
+    volumes:
+      - app_data:/data
+      - model_cache:/models:ro
+    healthcheck:
+      test: [CMD, python, -c, "import os, urllib.parse, urllib.request; request = urllib.request.Request('http://127.0.0.1:8080/api/health', headers={'Host': urllib.parse.urlsplit(os.environ['PFL_APP_ORIGIN']).netloc}); urllib.request.urlopen(request, timeout=3).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    mem_limit: 1536m
+
+  worker:
+    <<: *app-security
+    image: medical-document-assistant:local
+    command: [python, /app/deploy/worker_entry.py]
+    environment: *worker-environment
+    depends_on:
+      postgres: {condition: service_healthy}
+    volumes:
+      - app_data:/data
+      - model_cache:/models:ro
+    mem_limit: 2g
+    stop_grace_period: 300s
+
+  reconciler:
+    <<: *app-security
+    image: medical-document-assistant:local
+    command: [python, -m, medical_assistant.telemetry_cli]
+    environment: *reconciler-environment
+    depends_on:
+      postgres: {condition: service_healthy}
+      langfuse-web: {condition: service_healthy}
+    mem_limit: 512m
+
+  model-prepare:
+    <<: *app-security
+    profiles: [setup]
+    restart: "no"
+    image: medical-document-assistant:local
+    command: [python, -m, medical_assistant.reranking]
+    environment:
+      HF_HOME: /models/hf
+      XDG_CACHE_HOME: /models/cache
+      HF_HUB_OFFLINE: "0"
+      TRANSFORMERS_OFFLINE: "0"
+    volumes:
+      - model_cache:/models
+    mem_limit: 2g
+
+volumes:
+  app_data:
+  model_cache:

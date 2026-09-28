@@ -1,0 +1,25 @@
+flowchart LR
+    browser["Browser: English questions, uploads, source viewer, SSE"]
+
+    subgraph compose["Local Docker Compose"]
+        api["FastAPI container<br/>UI, LangGraph, run lifecycle"]
+        api -->|persistent stdio| mcp["MCP child in API container<br/>search_evidence / read_evidence / collect_scope<br/>read-only; no calculator"]
+        api -->|run state, jobs, audit, events| pg[("PostgreSQL 17<br/>assistant DB: document partitions, HNSW + BM25, spans<br/>Langfuse DB: metadata")]
+        mcp -->|repeatable-read, scoped role| pg
+        worker["Worker container<br/>PDF/TXT parser, fixed + structural chunks"] -->|claim job; atomic publish, revision/counts| pg
+        api -->|private upload bytes| files[("Private app_data volume")]
+        files -->|original bytes| worker
+        models[("Pinned local model cache<br/>E5 + MiniLM")]
+        models -->|load E5 for passage embeddings| worker
+        models -->|load E5 query model; V3 MiniLM reranker| mcp
+        reconciler["Trace reconciler container"] -->|pending audit/trace state| pg
+        lf["Langfuse web + worker"] -->|metadata| pg
+        lf --> lfdeps["ClickHouse / Redis / MinIO"]
+        api -->|trace observations and usage| lf
+        reconciler -->|verify or retry trace delivery| lf
+    end
+
+    browser -->|same-origin HTTP| api
+    api -->|authenticated HTTP, configured Codex provider| bridge["Host bridge on loopback"]
+    bridge -->|restricted role/model and app-owned profile| cli["Host Codex CLI"]
+    setup["One-off model-prepare"] -->|populate before normal runs| models

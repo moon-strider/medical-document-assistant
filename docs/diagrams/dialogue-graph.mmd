@@ -1,0 +1,23 @@
+flowchart TB
+    request["POST /runs: queued run freezes collection ID, revision, counts and token"] --> start_run["API start_run: running"]
+
+    subgraph dialogue["LangGraph: four registered nodes"]
+        start((START)) --> evidence["evidence<br/>bounded history; optional query planner for follow-up or long question<br/>search_evidence then read_evidence: V0 fixed HNSW; V1-3 hybrid; V3 reranks"]
+        evidence -->|planner returns needs_clarification| done((END))
+        evidence -->|evidence packet ready| generate["generate<br/>answer provider receives current packet and receipt<br/>V0/V1 final-only; V2/V3 may request one tool round"]
+        generate -->|first V2/V3 answer call requests tools| tools["tools: one bounded round<br/>up to two search/read requests; combined read up to 64 spans / 16 KiB<br/>or one collect_scope request, up to four pages / 32 KiB"]
+        tools -->|second answer call, final-only| generate
+        generate -->|answer or no round remains| validate["validate<br/>citation IDs in current packet; invocation receipt and coverage<br/>incomplete exhaustive claim or exhausted tools becomes partial"]
+        validate --> done
+    end
+
+    start_run --> start
+    done --> finish["API ownership check; Store.finish_run locks run and collection<br/>requires running status and unchanged revision/counts"]
+    finish -->|current scope| published["Atomic answer, assistant message and event; SSE replay"]
+    finish -->|changed or stopped| withheld["No answer published; scope_expired or prior terminal state"]
+
+    evidence -.-> failure["Exception, timeout or scope expiry: fail_run; no answer"]
+    generate -.-> failure
+    tools -.-> failure
+    validate -.-> failure
+    start_run -.-> cancelled["At any active stage: user cancellation → cancelled; API ownership loss → interrupted<br/>cancel provider in either case"]

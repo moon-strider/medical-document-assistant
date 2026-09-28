@@ -1,0 +1,237 @@
+{
+  "$defs": {
+    "CitationReview": {
+      "additionalProperties": false,
+      "properties": {
+        "claim_index": {
+          "minimum": -1,
+          "title": "Claim Index",
+          "type": "integer"
+        },
+        "evidence_id": {
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "label": {
+          "enum": [
+            "useful",
+            "redundant",
+            "irrelevant",
+            "not_assessable"
+          ],
+          "title": "Label",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claim_index",
+        "evidence_id",
+        "label",
+        "reason"
+      ],
+      "title": "CitationReview",
+      "type": "object"
+    },
+    "ClaimReview": {
+      "additionalProperties": false,
+      "properties": {
+        "claim_index": {
+          "minimum": -1,
+          "title": "Claim Index",
+          "type": "integer"
+        },
+        "claim_text": {
+          "title": "Claim Text",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "support_label": {
+          "enum": [
+            "supported",
+            "partial",
+            "unsupported",
+            "not_assessable"
+          ],
+          "title": "Support Label",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "claim_index",
+        "claim_text",
+        "evidence_ids",
+        "support_label",
+        "reason"
+      ],
+      "title": "ClaimReview",
+      "type": "object"
+    },
+    "JudgeScores": {
+      "additionalProperties": false,
+      "properties": {
+        "claim_support": {
+          "maximum": 4,
+          "minimum": 0,
+          "title": "Claim Support",
+          "type": "integer"
+        },
+        "completeness": {
+          "maximum": 4,
+          "minimum": 0,
+          "title": "Completeness",
+          "type": "integer"
+        },
+        "contradictions": {
+          "maximum": 4,
+          "minimum": 0,
+          "title": "Contradictions",
+          "type": "integer"
+        },
+        "temporal_subject_units": {
+          "maximum": 4,
+          "minimum": 0,
+          "title": "Temporal Subject Units",
+          "type": "integer"
+        },
+        "coverage": {
+          "maximum": 4,
+          "minimum": 0,
+          "title": "Coverage",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "claim_support",
+        "completeness",
+        "contradictions",
+        "temporal_subject_units",
+        "coverage"
+      ],
+      "title": "JudgeScores",
+      "type": "object"
+    },
+    "RequiredClaimReview": {
+      "additionalProperties": false,
+      "properties": {
+        "gold_claim_id": {
+          "title": "Gold Claim Id",
+          "type": "string"
+        },
+        "label": {
+          "enum": [
+            "present",
+            "partial",
+            "missing",
+            "not_assessable"
+          ],
+          "title": "Label",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "gold_claim_id",
+        "label",
+        "evidence_ids",
+        "reason"
+      ],
+      "title": "RequiredClaimReview",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "verdict": {
+      "enum": [
+        "pass",
+        "fail",
+        "not_assessable"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    },
+    "severity": {
+      "enum": [
+        "none",
+        "S0",
+        "S1",
+        "S2"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "status_correct": {
+      "title": "Status Correct",
+      "type": "boolean"
+    },
+    "coverage_valid": {
+      "title": "Coverage Valid",
+      "type": "boolean"
+    },
+    "scores": {
+      "$ref": "#/$defs/JudgeScores"
+    },
+    "claim_reviews": {
+      "items": {
+        "$ref": "#/$defs/ClaimReview"
+      },
+      "title": "Claim Reviews",
+      "type": "array"
+    },
+    "required_claim_reviews": {
+      "items": {
+        "$ref": "#/$defs/RequiredClaimReview"
+      },
+      "title": "Required Claim Reviews",
+      "type": "array"
+    },
+    "citation_reviews": {
+      "items": {
+        "$ref": "#/$defs/CitationReview"
+      },
+      "title": "Citation Reviews",
+      "type": "array"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "verdict",
+    "severity",
+    "status_correct",
+    "coverage_valid",
+    "scores",
+    "claim_reviews",
+    "required_claim_reviews",
+    "citation_reviews",
+    "reason"
+  ],
+  "title": "JudgeOutput",
+  "type": "object"
+}

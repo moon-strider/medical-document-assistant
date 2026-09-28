@@ -1,0 +1,47 @@
+[project]
+name = "medical-document-assistant"
+version = "0.1.0"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "fastapi>=0.135,<1",
+  "uvicorn[standard]>=0.35,<1",
+  "pydantic-settings>=2.10,<3",
+  "sqlalchemy>=2.0,<3",
+  "psycopg[binary]>=3.2,<4",
+  "pgvector>=0.4,<1",
+  "python-multipart>=0.0.20,<1",
+  "pdfplumber==0.11.10",
+  "sentence-transformers==6.1.0",
+  "langgraph==1.2.12",
+  "mcp==2.2.0",
+  "langfuse==4.15.6",
+  "httpx>=0.28,<1",
+  "openai>=2,<3",
+  "reportlab>=4,<6",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<10",
+    "pytest-asyncio>=1,<2",
+    "ruff>=0.12",
+    "pyyaml>=6,<7",
+    "jsonschema>=4,<5",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["backend/src/medical_assistant"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP"]

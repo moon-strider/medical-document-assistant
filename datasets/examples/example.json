@@ -1,0 +1,21 @@
+{
+  "purpose": "Illustrative source-grounded answer; not an evaluation case or measured result",
+  "question": "What haemoglobin result does the full blood count report, and what HbA1c result does the outpatient laboratory report?",
+  "expected_answer": "The full blood count reports haemoglobin of 10.8 g/dL. The separate outpatient laboratory report gives HbA1c of 6.9%.",
+  "evidence": [
+    {
+      "file": "full-blood-count.pdf",
+      "page": 1,
+      "line_start": 5,
+      "line_end": 5,
+      "quote": "Haemoglobin 10.8 g/dL"
+    },
+    {
+      "file": "hba1c-report.txt",
+      "page": null,
+      "line_start": 3,
+      "line_end": 3,
+      "quote": "HbA1c                          6.9 %"
+    }
+  ]
+}

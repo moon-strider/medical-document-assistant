@@ -1,0 +1,5 @@
+# Synthetic document examples
+
+The three files in `examples/` form one reading example. `full-blood-count.pdf` is a one-page blood count; `hba1c-report.txt` is a separate laboratory report. Both describe fictional records. `example.json` poses a question across the two documents and shows the expected answer with page and line references. It is a guide to reading the sources, not an upload format, evaluation case, or measured result. To try the question in the app, upload the PDF and TXT to the same collection as **D2 — Laboratory reports**.
+
+The broader synthetic corpus was prepared under GPT 6 Astra orchestration, with GPT 6 Sol High agents as authors, source readers, adversarial reviewers, and adjudicators. Reviewers visually checked every PDF page and compared all visible source lines with the imported text and locators before the questions and expected claims were fixed. This checks extraction for that corpus; the review was procedural rather than technically blinded, and it was not clinical validation. GPT 6 Luna High participated only as an answer generator in the later comparison.

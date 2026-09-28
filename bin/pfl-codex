@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+pfl_solution_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+pfl_state_root="$pfl_solution_root/tmp/work/runtime/codex-home"
+pfl_codex_binary="/opt/homebrew/bin/codex"
+if [[ ! -x "$pfl_codex_binary" ]]; then
+    printf '%s\n' 'Codex CLI is not installed or is not executable.' >&2
+    exit 69
+fi
+if [[ "$("$pfl_codex_binary" --version)" != 'codex-cli 0.156.1' ]]; then
+    printf '%s\n' 'Codex CLI version changed; review the application profiles before continuing.' >&2
+    exit 78
+fi
+if [[ ! -f "$pfl_state_root/config.toml" ]]; then
+    printf '%s\n' 'Application Codex configuration is missing.' >&2
+    exit 78
+fi
+exec /usr/bin/env -i \
+    PATH="/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
+    HOME="$HOME" \
+    USER="${USER:-}" \
+    LOGNAME="${LOGNAME:-}" \
+    LANG="${LANG:-en_US.UTF-8}" \
+    TERM="${TERM:-dumb}" \
+    TMPDIR="${TMPDIR:-/tmp}" \
+    CODEX_HOME="$pfl_state_root" \
+    "$pfl_codex_binary" "$@"

@@ -1,0 +1,130 @@
+{
+  "$defs": {
+    "Claim": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 40,
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "text",
+        "evidence_ids"
+      ],
+      "title": "Claim",
+      "type": "object"
+    },
+    "ToolRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "tool": {
+          "enum": [
+            "search_evidence",
+            "read_evidence",
+            "collect_scope"
+          ],
+          "title": "Tool",
+          "type": "string"
+        },
+        "query": {
+          "pattern": "^[\\s\\S]{0,512}$",
+          "title": "Query",
+          "type": "string"
+        },
+        "span_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 48,
+          "title": "Span Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "tool",
+        "query",
+        "span_ids"
+      ],
+      "title": "ToolRequest",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "enum": [
+        "answer",
+        "request_tools"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "supported",
+        "partial",
+        "conflicting",
+        "not_documented",
+        "needs_clarification"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "answer": {
+      "title": "Answer",
+      "type": "string"
+    },
+    "claims": {
+      "items": {
+        "$ref": "#/$defs/Claim"
+      },
+      "maxItems": 80,
+      "title": "Claims",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 30,
+      "title": "Limitations",
+      "type": "array"
+    },
+    "coverage_requirement": {
+      "enum": [
+        "claims",
+        "complete_scope"
+      ],
+      "title": "Coverage Requirement",
+      "type": "string"
+    },
+    "requests": {
+      "items": {
+        "$ref": "#/$defs/ToolRequest"
+      },
+      "maxItems": 2,
+      "title": "Requests",
+      "type": "array"
+    }
+  },
+  "required": [
+    "kind",
+    "status",
+    "answer",
+    "claims",
+    "limitations",
+    "coverage_requirement",
+    "requests"
+  ],
+  "title": "AnswerOutput",
+  "type": "object"
+}
